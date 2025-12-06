@@ -46,6 +46,8 @@ The pipeline is designed to be executed sequentially:
 
 2. Install dependencies: pip install -r requirements.txt
 
+3. You must install FFmpeg (Mac: brew install ffmpeg, Ubuntu: sudo apt install ffmpeg).
+
 ## **Key Results**
 
 1. Confidence is Bullish: A positive coefficient for Unified_Positive confirms the market rewards multimodal confidence.
