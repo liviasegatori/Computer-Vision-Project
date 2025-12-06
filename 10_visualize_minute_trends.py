@@ -5,22 +5,33 @@ import os
 import numpy as np
 
 # --- CONFIGURATION ---
+
 FILE_PATH = "FINAL_DATASET_READY_FOR_TRAINING.parquet"
 OUTPUT_DIR = "plots_minute_resolution"
 
 plt.style.use('seaborn-v0_8-whitegrid')
 sns.set_context("paper", font_scale=1.3)
 
+# define a function to aggregate the dataset to 1-minute intervals
 def get_aggregated_dataset(df):
+    
     print("   -> Aggregating full dataset to 1-minute intervals...")
+    # convert the real_time column to datetime objects
     df['real_time'] = pd.to_datetime(df['real_time'])
+    # floor the timestamps to minute resolution to create buckets
     df['minute_time'] = df['real_time'].dt.floor('min')
+    # ensure Close is numeric, coercing invalid values to NaN
     df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
+    # collect the list of numeric columns to aggregate
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    # group by video_id and minute_time and take the mean of numeric columns
     df_agg = df.groupby(['video_id', 'minute_time'])[numeric_cols].mean().reset_index()
+    
     return df_agg
 
+# define a function to plot a correlation heatmap for minute-level data
 def plot_minute_correlation_heatmap(df_agg, save_folder):
+    
     print("\nGenerating Minute-Level Correlation Matrix...")
     cols = [
         'iemo_ang', 'iemo_hap', 'iemo_fea', 
@@ -30,6 +41,8 @@ def plot_minute_correlation_heatmap(df_agg, save_folder):
         'Close'
     ]
     cols = [c for c in cols if c in df_agg.columns]
+
+    # compute the correlation matrix for the selected columns
     corr = df_agg[cols].corr()
     plt.figure(figsize=(14, 12))
     sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm", center=0, linewidths=0.5, square=True)
@@ -40,22 +53,29 @@ def plot_minute_correlation_heatmap(df_agg, save_folder):
     plt.close()
     print(f"   -> Saved: {filename}")
 
+# define a function to plot minute-level timelines for a single video
+
 def plot_minute_timeline(video_id, df_agg_vid, save_folder):
-    # Calculate Price Index
+
+    # compute the starting price from the first Close value
     start_price = df_agg_vid['Close'].iloc[0]
+    # ensure we don't divide by zero by replacing zero with 1.0
     if start_price == 0: start_price = 1.0
+    # copy the dataframe to avoid modifying the original slice
     df_agg_vid = df_agg_vid.copy()
+    # create a normalized Price_Index relative to the start price
     df_agg_vid['Price_Index'] = df_agg_vid['Close'] / start_price
     
-    # Create relative time axis
+    # compute relative time in minutes from the first minute_time
     df_agg_vid['Time_Min'] = (df_agg_vid['minute_time'] - df_agg_vid['minute_time'].iloc[0]).dt.total_seconds() / 60
 
-    # Create 5 Subplots
+    # create 5 stacked subplots sharing the x-axis
     fig, axes = plt.subplots(5, 1, figsize=(16, 18), sharex=True)
     x_col = 'Time_Min'
     
     # --- ROW 1: AUDIO ---
     ax1 = axes[0]
+    # plot audio anger and happiness if available
     if 'iemo_ang' in df_agg_vid.columns:
         ax1.plot(df_agg_vid[x_col], df_agg_vid['iemo_ang'], label='Anger (Voice)', color='#D62728', linewidth=2.5, marker='o', markersize=4)
         ax1.plot(df_agg_vid[x_col], df_agg_vid['iemo_hap'], label='Confidence (Voice)', color='#2CA02C', linewidth=2.5, marker='o', markersize=4)
@@ -64,11 +84,11 @@ def plot_minute_timeline(video_id, df_agg_vid, save_folder):
     ax1.legend(loc="upper right")
     ax1.grid(True, alpha=0.3)
     
-    # --- ROW 2: FACE (FIXED: Happy instead of Fear) ---
+    # --- ROW 2: FACE ---
     ax2 = axes[1]
+    # plot face anger and happiness if available
     if 'face_angry' in df_agg_vid.columns:
         ax2.plot(df_agg_vid[x_col], df_agg_vid['face_angry'], label='Anger (Face)', color='#FF7F0E', linewidth=2.5) # Orange
-        # CHANGED HERE: Back to Happiness
         ax2.plot(df_agg_vid[x_col], df_agg_vid['face_happy'], label='Happiness (Face)', color='#17BECF', linewidth=2.5) # Cyan
     ax2.set_ylabel("Avg Prob")
     ax2.set_title("2. Facial Expressions (Minute Avg)", loc='left', fontweight='bold')
@@ -104,6 +124,7 @@ def plot_minute_timeline(video_id, df_agg_vid, save_folder):
     ax5.legend(loc="upper right")
     ax5.grid(True, alpha=0.3)
     
+    # adjust layout to make sure subplots don't overlap
     plt.tight_layout()
     filename = f"{save_folder}/minute_timeline_{video_id[:15]}.png"
     plt.savefig(filename, dpi=300)
@@ -111,6 +132,7 @@ def plot_minute_timeline(video_id, df_agg_vid, save_folder):
     print(f"   -> Saved plot: {filename}")
 
 def main():
+
     if not os.path.exists(FILE_PATH):
         print(f"File {FILE_PATH} not found.")
         return
@@ -119,14 +141,18 @@ def main():
     print("Loading Dataset...")
     df = pd.read_parquet(FILE_PATH)
     
+    # aggregate the dataset to minute resolution
     df_agg = get_aggregated_dataset(df)
     plot_minute_correlation_heatmap(df_agg, OUTPUT_DIR)
 
     unique_videos = df_agg['video_id'].unique()
     print(f"\nGenerating Minute-Level Plots for {len(unique_videos)} videos...")
     
+    # iterate over each unique video id to produce individual timeline plots
     for vid in unique_videos:
+        # take the subset of rows corresponding to the current video id
         subset = df_agg[df_agg['video_id'] == vid]
+        # only plot videos that have more than 10 minutes of data
         if len(subset) > 10: 
             plot_minute_timeline(vid, subset, OUTPUT_DIR)
 

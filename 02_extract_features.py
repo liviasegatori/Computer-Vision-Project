@@ -1,3 +1,7 @@
+# Script to extract multimodal features (audio embeddings, text sentiment via FinBERT,
+# and pose-derived metrics) for video segments listed in a CSV manifest.
+# The extracted features are saved to a parquet file.
+
 import os, json, argparse, time, glob
 from pathlib import Path
 import numpy as np
@@ -42,12 +46,14 @@ def find_file_smart(base_dir: Path, video_id: str, filename: str) -> Path:
 # =========================
 # Models (lazy singletons)
 # =========================
+# Keep global singletons so models are loaded once and reused
 _W2V, _W2V_PROC = None, None
 _FINBERT, _FIN_TOK = None, None
 
 def get_w2v():
     global _W2V, _W2V_PROC
     if _W2V is None:
+        # Load wav2vec2 processor and model for audio embeddings
         _W2V_PROC = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
         _W2V = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h").eval()
     return _W2V, _W2V_PROC
@@ -55,6 +61,7 @@ def get_w2v():
 def get_finbert():
     global _FINBERT, _FIN_TOK
     if _FINBERT is None:
+        # Load FinBERT tokenizer and classifier for financial sentiment scoring
         name = "ProsusAI/finbert"
         _FIN_TOK = AutoTokenizer.from_pretrained(name)
         _FINBERT = AutoModelForSequenceClassification.from_pretrained(name).eval()
@@ -66,6 +73,7 @@ def get_finbert():
 def load_audio_slice(media_path: Path, t0: float, t1: float, sr=16000):
     if not media_path or not media_path.exists() or media_path.is_dir():
         return None, None
+    # Compute duration and load audio chunk using librosa (mono)
     dur = max(0.0, float(t1) - float(t0))
     try:
         y, sr = librosa.load(str(media_path), sr=sr, offset=float(t0), duration=dur, mono=True)
@@ -77,6 +85,7 @@ def load_audio_slice(media_path: Path, t0: float, t1: float, sr=16000):
 def wav2vec2_embed(y, sr):
     if y is None or len(y) == 0:
         return None
+    # Compute wav2vec2 embedding: mean pooling over last hidden state
     model, proc = get_w2v()
     with torch.no_grad():
         inputs = proc(y, sampling_rate=sr, return_tensors="pt")
@@ -85,6 +94,7 @@ def wav2vec2_embed(y, sr):
     return emb
 
 def finbert_scores(text):
+    # Return NaNs for empty/non-string inputs, otherwise compute class probabilities
     if not isinstance(text, str) or not text.strip():
         return dict(fin_pos=np.nan, fin_neu=np.nan, fin_neg=np.nan)
     model, tok = get_finbert()
@@ -95,6 +105,9 @@ def finbert_scores(text):
     return dict(fin_neg=float(probs[0]), fin_neu=float(probs[1]), fin_pos=float(probs[2]))
 
 def read_pose_feats(kp_path: Path):
+    # Read pose keypoints JSON (expected format) and compute simple pose metrics:
+    # openness = distance between wrists normalized by shoulder width,
+    # torso lean and head tilt in degrees, shoulder width absolute.
     if not kp_path or not kp_path.exists():
         return dict(openness=np.nan, torso_lean_deg=np.nan, head_tilt_deg=np.nan, shoulder_width=np.nan)
     try:
@@ -142,9 +155,11 @@ def main():
         print(f"Manifest not found: {args.manifest}")
         return
 
+    # Read CSV manifest where each row corresponds to a segment to extract features for
     df = pd.read_csv(args.manifest)
     total_rows = len(df)
     
+    # Pre-scan unique videos to locate audio.wav files using smart resolver to avoid repeated lookups
     unique_videos = df['video_id'].unique()
     audio_map = {}
     print(f"Scanning for audio files for {len(unique_videos)} videos...")
@@ -160,6 +175,7 @@ def main():
     rows = []
     start_time = time.time()
 
+    # Iterate over manifest rows and extract features with a progress bar
     with tqdm(total=total_rows, desc="Extracting features", ncols=100, dynamic_ncols=True) as pbar:
         for i, r in df.iterrows():
             vid = str(r.get("video_id", "")).strip()
@@ -168,22 +184,26 @@ def main():
             # Resolve paths
             audio_path = audio_map.get(vid, Path(""))
             
-            # Keypoints
+            # Resolve keypoints path: if audio folder has keypoints, prefer that; else fallback to base_dir path
             kp_rel = str(r.get("keypoints_path", ""))
             if audio_path.exists() and "audio.wav" in str(audio_path):
                  keyp_path = audio_path.parent / "keypoints" / Path(kp_rel).name
             else:
                  keyp_path = base_dir / kp_rel
 
+            # Audio embedding (wav2vec2) for the time slice if audio available
             a_emb = None
             if audio_path.exists():
                 y, sr = load_audio_slice(audio_path, t0, t1, sr=args.audio_sr)
                 if y is not None and y.size > 0:
                     a_emb = wav2vec2_embed(y, sr)
 
+            # Text sentiment scores from FinBERT
             s = finbert_scores(r.get("text_segment", ""))
+            # Pose-derived features from keypoints JSON
             bl = read_pose_feats(keyp_path)
 
+            # Build row dictionary with scalar features + flattened audio embedding prefixed w2v_
             row = {
                 "video_id": vid, "t_start": t0, "t_end": t1,
                 "fin_pos": s["fin_pos"], "fin_neu": s["fin_neu"], "fin_neg": s["fin_neg"],
@@ -198,6 +218,7 @@ def main():
 
             pbar.update(1)
 
+    # Save collected features to parquet
     out_df = pd.DataFrame(rows)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     out_df.to_parquet(args.out, index=False)
