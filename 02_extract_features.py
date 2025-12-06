@@ -1,6 +1,13 @@
-# Script to extract multimodal features (audio embeddings, text sentiment via FinBERT,
-# and pose-derived metrics) for video segments listed in a CSV manifest.
-# The extracted features are saved to a parquet file.
+"""
+Feature Extraction Pipeline (Audio, Text, Body)
+-----------------------------------------------
+This script processes video segments to extract raw multimodal signals:
+1. Audio: Uses Facebook's Wav2Vec2 (Transformer) to capture vocal intonation embeddings.
+2. Text: Uses FinBERT (Financial Sentiment) to capture semantic meaning specific to finance.
+3. Body: Uses MediaPipe to calculate geometric pose invariants (Openness, Lean).
+
+Note: Face features are extracted separately in script 03 due to ViT memory requirements.
+"""
 
 import os, json, argparse, time, glob
 from pathlib import Path

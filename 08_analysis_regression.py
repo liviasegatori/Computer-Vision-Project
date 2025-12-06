@@ -1,3 +1,13 @@
+"""
+Statistical Significance Analysis (OLS Regression)
+--------------------------------------------------
+This script performs Ordinary Least Squares (OLS) regression to quantify the 
+relationship between behavioral signals and market returns.
+
+It implements a 'Lag Optimization Loop' to identify how long it takes for the 
+market to price in the non-verbal information (Latency Analysis).
+"""
+
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm

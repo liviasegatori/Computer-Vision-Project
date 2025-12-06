@@ -1,3 +1,15 @@
+"""
+Dataset Synchronization & Alignment
+-----------------------------------
+This script fuses the extracted multimodal features with high-frequency market data.
+It handles the critical 'Time-Alignment' problem between:
+1. Video Time (Relative: 0s to End)
+2. Market Time (Absolute: EST/EDT)
+
+CRITICAL: It uses backward-looking merge ('merge_asof') to prevent data leakage 
+(ensuring the model cannot 'see' future prices).
+"""
+
 import pandas as pd
 import glob
 import os

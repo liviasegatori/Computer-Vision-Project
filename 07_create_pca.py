@@ -1,3 +1,16 @@
+"""
+Dimensionality Reduction & Feature Fusion (PCA)
+-----------------------------------------------
+This script reduces the high-dimensional feature space (~800 columns) into 
+interpretable "Super-Features" (Unified Positive, Unified Negative, etc.).
+
+Methodology:
+1. Groups raw features by semantic category (e.g., all "Anger" related columns).
+2. Applies Principal Component Analysis (PCA) to extract the dominant variance (PC1).
+3. Performs Sign Correction to ensure the PC1 score positively correlates with the 
+   intensity of the emotion (since PCA direction is mathematically arbitrary).
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA

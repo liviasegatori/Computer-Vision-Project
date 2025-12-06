@@ -1,3 +1,14 @@
+"""
+Market Direction Prediction (Classification)
+--------------------------------------------
+This script runs a Grid Search to train a classifier (Random Forest, SVM, MLP)
+to predict the DIRECTION of the market (Up/Down) based on behavioral features.
+
+It optimizes for two environmental hyperparameters:
+1. Lag: Reaction time of the market.
+2. Threshold: The minimum volatility required to label a move as 'significant'.
+"""
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold, cross_val_score, ParameterGrid
