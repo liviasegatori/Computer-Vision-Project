@@ -1,0 +1,19 @@
+# Ignore folders with raw heavy data
+output_*/
+features/
+features_with_emotions/
+downloads/
+market_data/
+wav2vec2-iemocap-local/
+Session1/
+
+# Ignore large raw files (keep only the final parquet)
+*.mp4
+*.wav
+*.mp3
+FINAL_DATASET_READY_FOR_TRAINING.parquet
+
+# Ignore system files
+.DS_Store
+__pycache__/
+*.ipynb_checkpoints

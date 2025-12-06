@@ -1,0 +1,45 @@
+# --- Core Data Science & Math ---
+numpy==1.26.4
+pandas==2.2.2
+scipy>=1.11.0
+
+# --- Machine Learning & Stats ---
+scikit-learn>=1.5.0
+statsmodels>=0.14.0
+
+# --- Deep Learning (PyTorch) ---
+# Note: For Mac (MPS) or CUDA, specific installation commands are often better, 
+# but this will pull the standard version compatible with Transformers.
+torch>=2.4.1
+torchvision>=0.19.1
+torchaudio>=2.4.1
+
+# --- Transformers & NLP (Hugging Face) ---
+transformers==4.44.2
+tokenizers>=0.19.1
+huggingface-hub>=0.23.0
+accelerate>=0.30.0
+
+# --- Computer Vision & Image Processing ---
+opencv-python>=4.9.0
+mediapipe>=0.10.14
+pillow>=10.3.0
+
+# --- Audio Processing ---
+librosa>=0.10.1
+soundfile>=0.12.1
+audioread>=3.0.1
+# openai-whisper requires 'ffmpeg' installed on the system (brew install ffmpeg)
+openai-whisper>=20231117
+
+# --- Financial Data ---
+yfinance>=0.2.44
+
+# --- Visualization ---
+matplotlib>=3.9.0
+seaborn>=0.13.2
+
+# --- Utilities ---
+tqdm>=4.66.0
+yt-dlp>=2024.0.0
+pyarrow>=16.1.0  # Critical for pandas to read/write parquet files
