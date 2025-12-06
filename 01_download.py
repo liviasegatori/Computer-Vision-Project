@@ -1,3 +1,13 @@
+"""
+Data Acquisition Module
+-----------------------
+This script automates the retrieval of high-fidelity video data from YouTube
+using 'yt-dlp'. It ensures that the Federal Reserve press conferences are
+downloaded in the best available audio/video format for analysis.
+
+Requirement: FFmpeg must be installed on the system to merge audio/video streams.
+"""
+
 # pip install yt-dlp
 
 from pathlib import Path

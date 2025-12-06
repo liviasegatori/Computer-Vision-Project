@@ -1,3 +1,11 @@
+"""
+Audio Inference & Feature Augmentation
+--------------------------------------
+This script applies the fine-tuned Wav2Vec2 model (from script 04) to the 
+financial dataset. It reads the raw features, locates the original audio, 
+and appends 8 distinct emotion probability columns (Anger, Happiness, etc.).
+"""
+
 import pandas as pd
 import torch
 import torchaudio

@@ -1,3 +1,10 @@
+"""
+Facial Micro-Expression Extraction (Vision Transformer)
+-------------------------------------------------------
+This script utilizes a pre-trained Vision Transformer (ViT) to classify 
+facial expressions in every frame.
+"""
+
 import pandas as pd
 import torch
 from transformers import AutoImageProcessor, AutoModelForImageClassification

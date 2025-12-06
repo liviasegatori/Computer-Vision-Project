@@ -1,3 +1,15 @@
+"""
+Audio Model Training (Transfer Learning)
+----------------------------------------
+This script fine-tunes a pre-trained Wav2Vec2 model on the IEMOCAP dataset.
+
+Methodology:
+1. Domain Adaptation: Takes a generic speech model (Wav2Vec2-Base) and trains it
+   to recognize emotional valence/arousal.
+2. Optimization: Uses Gradient Accumulation to simulate large batch sizes on
+   consumer hardware (essential for Transformer training).
+"""
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
