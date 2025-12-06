@@ -53,3 +53,11 @@ The pipeline is designed to be executed sequentially:
 2. Uncertainty is Bearish: Hesitation reliably predicts price drops.
 
 3. Latency: The "Directional Impulse" occurs at 2 minutes, while full "Value Realization" takes 15 minutes.
+
+## **Data & Reproducibility**
+To ensure immediate reproducibility of our results without requiring the download of large video files (10GB+), we include the following essential datasets in this repository:
+
+* **`real_start_times.csv`**: Critical metadata file mapping video filenames to their exact UTC start times for market synchronization.
+* **`FINAL_DATASET_PCA.parquet`**: The final pre-processed dataset containing the aligned PCA "Super-Features" and market data.
+
+> **Note:** You can skip the heavy extraction pipeline (scripts 01-07) and run **`08_regression_analysis.py`** and **`09_classification_model.py`** directly on this dataset to verify our statistical findings immediately.
