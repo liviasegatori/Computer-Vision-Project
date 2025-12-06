@@ -42,7 +42,7 @@ The pipeline is designed to be executed sequentially:
 
 ## **Setup & Requirements**
 
-1. Clone the repository: git clone https://github.com/YOUR_USERNAME/multimodal-financial-forecasting.git
+1. Clone the repository: git clone https://github.com/liviasegatori/Computer-Vision-Project (example)
 
 2. Install dependencies: pip install -r requirements.txt
 
