@@ -3,7 +3,7 @@ import numpy as np
 import statsmodels.api as sm
 import os
 
-# We point this to the NEW PCA file you just created
+# We point this to the NEW PCA file we just created
 FILE_PATH = "FINAL_DATASET_PCA.parquet"
 
 def main():
