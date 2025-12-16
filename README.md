@@ -14,7 +14,7 @@ The pipeline is designed to be executed sequentially:
 
 **1. Data Acquisition & Extraction**
 
-01_download.py: Downloads high-fidelity press conferences from YouTube.
+01_0_download.py: Downloads high-fidelity press conferences from YouTube.
 
 01_1_video_preprocess.py: Does the preprocessing of the downloaded videos.
 
