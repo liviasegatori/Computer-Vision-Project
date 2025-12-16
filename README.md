@@ -16,6 +16,8 @@ The pipeline is designed to be executed sequentially:
 
 01_download.py: Downloads high-fidelity press conferences from YouTube.
 
+01_1_video_preprocess.py: Does the preprocessing of the downloaded videos.
+
 02_extract_features.py: Extracts raw features (Text, Audio, Body Kinematics) and aligns them.
 
 03_extract_faces.py: Extracts facial micro-expressions using a Vision Transformer.
